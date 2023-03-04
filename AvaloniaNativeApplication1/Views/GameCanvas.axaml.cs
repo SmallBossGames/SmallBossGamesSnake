@@ -37,6 +37,12 @@ namespace AvaloniaNativeApplication1.Views
         public uint startIndex;
     }
 
+    public struct AppleState
+    {
+        public IndexedPoint[] points;
+        public uint startIndex;
+    }
+
     public partial class GameCanvas : Window
     {
         private readonly uint blocks = 50;
@@ -50,7 +56,7 @@ namespace AvaloniaNativeApplication1.Views
         private HeadState _headState;
         private MovingDirection _nextDirection;
 
-        private readonly Polyline _tailLine;
+        private readonly List<Polyline> _tailLines = new();
         private TailState _tailState;
 
 
@@ -72,13 +78,11 @@ namespace AvaloniaNativeApplication1.Views
             GrassField.Children.Add(_head);
             RedrawHead();
 
-            _tailLine = CreateTail();
             _tailState = new TailState()
             {
                 points = new IndexedPoint[10],
                 startIndex = 0,
             };
-            GrassField.Children.Add(_tailLine);
             RedrawTail();
             
             GrassField.SizeChanged += GrassField_SizeChanged;
@@ -141,12 +145,13 @@ namespace AvaloniaNativeApplication1.Views
             }
         }
 
-        public Polyline CreateTail()
+        public Polyline CreateTail(IList<Point> points)
         {
             return new Polyline()
             {
                 Stroke = Brushes.Orange,
                 StrokeThickness = 4,
+                Points = points
             };
         }
 
@@ -164,22 +169,51 @@ namespace AvaloniaNativeApplication1.Views
 
         public void RedrawTail()
         {
-            var tail = _tailLine;
             var squareSize = GrassField.DesiredSize.Width;
             var step = squareSize / blocks;
             var offset = step / 2;
 
             var newPoints = new List<Point>(_tailState.points.Length);
-            foreach (var point in _tailState.points[(int)_tailState.startIndex..])
+            var lastPoint = (IndexedPoint?)null;
+            var fragments = new List<Polyline>();
+
+            for (int i = 0; i < _tailState.points.Length; i++)
             {
-                newPoints.Add(new Point(point.xIndex * step + offset, point.yIndex * step + offset));
-            }
-            foreach (var point in _tailState.points[..(int)_tailState.startIndex])
-            {
-                newPoints.Add(new Point(point.xIndex * step + offset, point.yIndex * step + offset));
+                var index = (i + _tailState.startIndex) % _tailState.points.Length;
+                var point = _tailState.points[index];
+
+                if (lastPoint is null)
+                {
+                    newPoints.Add(new Point(point.xIndex * step + offset, point.yIndex * step + offset));
+                    lastPoint = point;
+
+                }
+                else if (lastPoint is IndexedPoint ip)
+                {
+                    if (Math.Abs((int)ip.xIndex - (int)point.xIndex) > 1 || Math.Abs((int)ip.yIndex - (int)point.yIndex) > 1)
+                    {
+                        var fragment = CreateTail(newPoints.ToList());
+                        newPoints.Clear();
+
+                        fragments.Add(fragment);
+                    }
+
+                    newPoints.Add(new Point(point.xIndex * step + offset, point.yIndex * step + offset));
+                    lastPoint = point;
+                }
             }
 
-            tail.Points = newPoints;
+            var lastFragment = CreateTail(newPoints);
+
+            fragments.Add(lastFragment);
+
+            var oldFragments = _tailLines.ToArray();
+            
+            _tailLines.Clear();
+            _tailLines.AddRange(fragments);
+
+            GrassField.Children.RemoveAll(oldFragments);
+            GrassField.Children.AddRange(fragments);
         }
 
         private ImmutableArray<Ellipse> CreateDebugPoints()
