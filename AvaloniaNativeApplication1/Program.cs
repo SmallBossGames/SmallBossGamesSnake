@@ -2,8 +2,10 @@
 using Avalonia.ReactiveUI;
 using System;
 
-namespace AvaloniaNativeApplication1 {
-    internal class Program {
+namespace AvaloniaNativeApplication1
+{
+    internal class Program
+    {
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
         // yet and stuff might break.
