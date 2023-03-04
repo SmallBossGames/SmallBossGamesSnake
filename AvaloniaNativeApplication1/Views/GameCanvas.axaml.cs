@@ -39,8 +39,8 @@ namespace AvaloniaNativeApplication1.Views
 
     public struct AppleState
     {
-        public IndexedPoint[] points;
-        public uint startIndex;
+        public uint xIndex;
+        public uint yIndex;
     }
 
     public partial class GameCanvas : Window
@@ -59,6 +59,8 @@ namespace AvaloniaNativeApplication1.Views
         private readonly List<Polyline> _tailLines = new();
         private TailState _tailState;
 
+        private AppleState _appleState;
+        private readonly Shape _apple;
 
         public GameCanvas()
         {
@@ -84,7 +86,12 @@ namespace AvaloniaNativeApplication1.Views
                 startIndex = 0,
             };
             RedrawTail();
-            
+
+            _apple = CreateApple();
+            _appleState = new AppleState();
+            GrassField.Children.Add(_apple);
+            PlaceApple();
+
             GrassField.SizeChanged += GrassField_SizeChanged;
 
             _ = StartGameLoopAsync(_gameLoopTokenSource.Token);
@@ -125,11 +132,16 @@ namespace AvaloniaNativeApplication1.Views
 
                 canvas.Width = squareSize;
 
-                RedrawGrid(squareSize);
             }
+
+            RedrawGrid();
+            RedrawTail();
+            RedrawHead();
+            RedrawApple();
         }
 
-        public void RedrawGrid(double squareSize) {
+        public void RedrawGrid() {
+            var squareSize = GrassField.DesiredSize.Width;
             var step = squareSize / blocks;
             var offset = step / 2;
 
@@ -238,6 +250,49 @@ namespace AvaloniaNativeApplication1.Views
                 Width = 10,
                 Height = 10,
             };
+        }
+
+        private Ellipse CreateApple()
+        {
+            return new Ellipse()
+            {
+                Fill = Brushes.Green,
+                Width = 8,
+                Height = 8,
+            };
+        }
+
+        private void PlaceApple()
+        {
+            var allPoints = Enumerable.Range(0, (int)(blocks * blocks)).ToHashSet();
+            var snakePoints = _tailState.points.Select(x => (int)(x.xIndex * blocks + x.yIndex)).ToHashSet();
+
+            allPoints.ExceptWith(snakePoints);
+            var availablePoints = allPoints.ToImmutableArray();
+
+            var index = Random.Shared.Next(availablePoints.Length);
+            var pointX = availablePoints[index] / blocks;
+            var pointY = availablePoints[index] - pointX * blocks;
+            var state = new AppleState() 
+            {
+                xIndex = (uint)pointX,
+                yIndex = (uint)pointY,
+            };
+
+            _appleState = state;
+
+        }
+
+        private void RedrawApple()
+        {
+            var apple = _apple;
+            var state = _appleState;
+            var squareSize = GrassField.DesiredSize.Width;
+            var step = squareSize / blocks;
+            var offset = step / 2;
+
+            Canvas.SetLeft(apple, state.xIndex * step + offset - apple.Width / 2);
+            Canvas.SetTop(apple, state.yIndex * step + offset - apple.Height / 2);
         }
 
         private async Task StartGameLoopAsync(CancellationToken cancellationToken)
