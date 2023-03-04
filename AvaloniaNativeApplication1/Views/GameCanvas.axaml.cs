@@ -319,22 +319,65 @@ namespace AvaloniaNativeApplication1.Views
                         break;
                 }
 
+                if(nextHeadState.xIndex == _appleState.xIndex && nextHeadState.yIndex == _appleState.yIndex)
+                {
+
+                }
+
                 _headState = nextHeadState;
 
                 var nextTailState = _tailState;
                 var nextPointIndex = nextTailState.startIndex;
 
-                nextTailState.startIndex = LoopIncrease(nextPointIndex, (uint)nextTailState.points.Length);
-                nextTailState.points[nextPointIndex] = new IndexedPoint
+                static IndexedPoint[] CreatePoints(TailState tailState, HeadState headState)
                 {
-                    xIndex = nextHeadState.xIndex,
-                    yIndex = nextHeadState.yIndex,
-                };
+                    var oldPoints = tailState.points.AsSpan();
+                    var newPoints = new IndexedPoint[tailState.points.Length + 1];
+                    var newPointsSpan = newPoints.AsSpan();
 
-                _tailState = nextTailState;
 
-                RedrawTail();
-                RedrawHead();
+                    var firstPart = oldPoints[(int)tailState.startIndex..];
+                    var secondPart = oldPoints[..(int)tailState.startIndex];
+
+                    firstPart.CopyTo(newPointsSpan);
+                    secondPart.CopyTo(newPointsSpan[firstPart.Length..]);
+                    newPointsSpan[^1] = new IndexedPoint
+                    {
+                        xIndex = headState.xIndex,
+                        yIndex = headState.yIndex,
+                    };
+
+                    return newPoints;
+                }
+
+                if (nextHeadState.xIndex == _appleState.xIndex && nextHeadState.yIndex == _appleState.yIndex)
+                {
+                    nextTailState.points = CreatePoints(nextTailState, nextHeadState);
+                    nextTailState.startIndex = 0;
+
+                    _tailState = nextTailState;
+
+                    PlaceApple();
+                    RedrawApple();
+                    RedrawTail();
+                    RedrawHead();
+                }
+                else
+                {
+                    nextTailState.startIndex = LoopIncrease(nextPointIndex, (uint)nextTailState.points.Length);
+                    nextTailState.points[nextPointIndex] = new IndexedPoint
+                    {
+                        xIndex = nextHeadState.xIndex,
+                        yIndex = nextHeadState.yIndex,
+                    };
+
+                    _tailState = nextTailState;
+
+                    RedrawTail();
+                    RedrawHead();
+                }
+
+                
 
                 await Task.Delay(500, cancellationToken);
             }
