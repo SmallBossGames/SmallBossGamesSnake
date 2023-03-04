@@ -1,9 +1,11 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Media;
 using Avalonia.Threading;
 using DynamicData.Binding;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
@@ -16,6 +18,12 @@ namespace AvaloniaNativeApplication1.Views
         Up, Down, Left, Right
     }
 
+    public struct IndexedPoint 
+    { 
+        public uint xIndex;
+        public uint yIndex;
+    }
+
     public struct HeadState
     {
         public MovingDirection movingDirection;
@@ -23,18 +31,27 @@ namespace AvaloniaNativeApplication1.Views
         public uint yIndex;
     }
 
+    public struct TailState
+    {
+        public IndexedPoint[] points;
+        public uint startIndex;
+    }
+
     public partial class GameCanvas : Window
     {
-        private readonly uint blocks = 10;
+        private readonly uint blocks = 50;
 
         private readonly ImmutableArray<Ellipse> _debugPoints;
-        private readonly Shape _head;
+       
 
         private readonly CancellationTokenSource _gameLoopTokenSource = new();
 
-
+        private readonly Shape _head;
         private HeadState _headState;
         private MovingDirection _nextDirection;
+
+        private readonly Polyline _tailLine;
+        private TailState _tailState;
 
 
         public GameCanvas()
@@ -54,6 +71,15 @@ namespace AvaloniaNativeApplication1.Views
             _nextDirection = MovingDirection.Up;
             GrassField.Children.Add(_head);
             RedrawHead();
+
+            _tailLine = CreateTail();
+            _tailState = new TailState()
+            {
+                points = new IndexedPoint[10],
+                startIndex = 0,
+            };
+            GrassField.Children.Add(_tailLine);
+            RedrawTail();
             
             GrassField.SizeChanged += GrassField_SizeChanged;
 
@@ -115,6 +141,15 @@ namespace AvaloniaNativeApplication1.Views
             }
         }
 
+        public Polyline CreateTail()
+        {
+            return new Polyline()
+            {
+                Stroke = Brushes.Orange,
+                StrokeThickness = 4,
+            };
+        }
+
         public void RedrawHead()
         {
             var head = _head;
@@ -125,6 +160,26 @@ namespace AvaloniaNativeApplication1.Views
 
             Canvas.SetLeft(head, state.xIndex * step + offset - head.Width / 2);
             Canvas.SetTop(head, state.yIndex * step + offset - head.Height / 2);
+        }
+
+        public void RedrawTail()
+        {
+            var tail = _tailLine;
+            var squareSize = GrassField.DesiredSize.Width;
+            var step = squareSize / blocks;
+            var offset = step / 2;
+
+            var newPoints = new List<Point>(_tailState.points.Length);
+            foreach (var point in _tailState.points[(int)_tailState.startIndex..])
+            {
+                newPoints.Add(new Point(point.xIndex * step + offset, point.yIndex * step + offset));
+            }
+            foreach (var point in _tailState.points[..(int)_tailState.startIndex])
+            {
+                newPoints.Add(new Point(point.xIndex * step + offset, point.yIndex * step + offset));
+            }
+
+            tail.Points = newPoints;
         }
 
         private ImmutableArray<Ellipse> CreateDebugPoints()
@@ -155,28 +210,41 @@ namespace AvaloniaNativeApplication1.Views
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var nextState = _headState;
+                var nextHeadState = _headState;
 
-                nextState.movingDirection = _nextDirection;
+                nextHeadState.movingDirection = _nextDirection;
 
-                switch (nextState.movingDirection)
+                switch (nextHeadState.movingDirection)
                 {
                     case MovingDirection.Up:
-                        nextState.yIndex = LoopDecrease(nextState.yIndex, blocks);
+                        nextHeadState.yIndex = LoopDecrease(nextHeadState.yIndex, blocks);
                         break;
                     case MovingDirection.Down:
-                        nextState.yIndex = LoopIncrease(nextState.yIndex, blocks);
+                        nextHeadState.yIndex = LoopIncrease(nextHeadState.yIndex, blocks);
                         break;
                     case MovingDirection.Left:
-                        nextState.xIndex = LoopDecrease(nextState.xIndex, blocks);
+                        nextHeadState.xIndex = LoopDecrease(nextHeadState.xIndex, blocks);
                         break;
                     case MovingDirection.Right:
-                        nextState.xIndex = LoopIncrease(nextState.xIndex, blocks);
+                        nextHeadState.xIndex = LoopIncrease(nextHeadState.xIndex, blocks);
                         break;
                 }
 
-                _headState = nextState;
+                _headState = nextHeadState;
 
+                var nextTailState = _tailState;
+                var nextPointIndex = nextTailState.startIndex;
+
+                nextTailState.startIndex = LoopIncrease(nextPointIndex, (uint)nextTailState.points.Length);
+                nextTailState.points[nextPointIndex] = new IndexedPoint
+                {
+                    xIndex = nextHeadState.xIndex,
+                    yIndex = nextHeadState.yIndex,
+                };
+
+                _tailState = nextTailState;
+
+                RedrawTail();
                 RedrawHead();
 
                 await Task.Delay(500, cancellationToken);
