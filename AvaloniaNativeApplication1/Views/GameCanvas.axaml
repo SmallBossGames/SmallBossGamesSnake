@@ -10,7 +10,8 @@
   
   <DockPanel>
     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Background="AliceBlue">
-      <TextBlock Padding="12" >Счёт: </TextBlock>
+      <Button x:Name="RestartButton" Padding="8" Margin="4">Restart</Button>
+      <TextBlock Padding="12" >Score: </TextBlock>
       <TextBlock Padding="12" Text="{Binding SnakeLength, Mode=OneWay}"/>
     </StackPanel>
     <Canvas 

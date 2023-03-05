@@ -51,18 +51,15 @@ namespace AvaloniaNativeApplication1.Views
         private const uint Blocks = 50;
 
         private readonly ImmutableArray<Ellipse> _debugPoints;
-
-        private readonly CancellationTokenSource _gameLoopTokenSource = new();
-
         private readonly Shape _head;
-        private HeadState _headState;
-        private MovingDirection _nextDirection;
-
-        private readonly List<Polyline> _tailLines = new();
-        private TailState _tailState;
-
-        private AppleState _appleState;
         private readonly Shape _apple;
+        private readonly List<Polyline> _tailLines = new();
+
+        private CancellationTokenSource _gameLoopTokenSource = new();
+        private MovingDirection _nextDirection;
+        private HeadState _headState;
+        private TailState _tailState;
+        private AppleState _appleState;
 
         public GameCanvas()
         {
@@ -72,34 +69,24 @@ namespace AvaloniaNativeApplication1.Views
             GrassField.Children.AddRange(_debugPoints);
 
             _head = CreateHead();
-            _headState = new HeadState()
-            {
-                movingDirection = MovingDirection.Up,
-                xIndex = 0,
-                yIndex = 0,
-            };
-            _nextDirection = MovingDirection.Up;
             GrassField.Children.Add(_head);
-            RedrawHead();
-
-            _tailState = new TailState()
-            {
-                points = new IndexedPoint[2],
-                startIndex = 0,
-            };
-            RedrawTail();
 
             _apple = CreateApple();
-            _appleState = new AppleState();
             GrassField.Children.Add(_apple);
-            PlaceApple();
+
+            Closing += GameCanvas_Closing;
+            KeyDown += GameCanvas_KeyDown;
 
             GrassField.SizeChanged += GrassField_SizeChanged;
 
-            _ = StartGameLoopAsync(_gameLoopTokenSource.Token);
-            Closing += GameCanvas_Closing;
+            RestartButton.Click += RestartButton_Click;
 
-            KeyDown += GameCanvas_KeyDown;
+            ResetState();
+        }
+
+        private void RestartButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+           ResetState();
         }
 
         private void GameCanvas_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -138,13 +125,46 @@ namespace AvaloniaNativeApplication1.Views
 
             UpdateScore();
 
-            RedrawGrid();
+            RedrawDebugGrid();
             RedrawTail();
             RedrawHead();
             RedrawApple();
         }
 
-        public void RedrawGrid() {
+        private void ResetState()
+        {
+            _nextDirection = MovingDirection.Up;
+
+            _headState = new HeadState()
+            {
+                movingDirection = MovingDirection.Up,
+                xIndex = 1,
+                yIndex = Blocks - 1,
+            };
+           
+            _tailState = new TailState()
+            {
+                points = new IndexedPoint[2],
+                startIndex = 0,
+            };
+
+            _appleState = new AppleState();
+            PlaceApple();
+
+            UpdateScore();
+
+            RedrawDebugGrid();
+            RedrawTail();
+            RedrawHead();
+            RedrawApple();
+
+            _gameLoopTokenSource.Cancel();
+            _gameLoopTokenSource = new();
+
+            _ = StartGameLoopAsync(_gameLoopTokenSource.Token);
+        }
+
+        public void RedrawDebugGrid() {
             var squareSize = GrassField.DesiredSize.Width;
             var step = squareSize / Blocks;
             var offset = step / 2;
@@ -323,7 +343,7 @@ namespace AvaloniaNativeApplication1.Views
                         break;
                 }
 
-                if(nextHeadState.xIndex == _appleState.xIndex && nextHeadState.yIndex == _appleState.yIndex)
+                if (nextHeadState.xIndex == _appleState.xIndex && nextHeadState.yIndex == _appleState.yIndex)
                 {
 
                 }
@@ -332,6 +352,24 @@ namespace AvaloniaNativeApplication1.Views
 
                 var nextTailState = _tailState;
                 var nextPointIndex = nextTailState.startIndex;
+
+                static bool DetectCollision(ReadOnlySpan<IndexedPoint> points, IndexedPoint headPoint)
+                {
+                    foreach (var item in points)
+                    {
+                        if (item.xIndex == headPoint.xIndex && item.yIndex == headPoint.yIndex)
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+
+                if (DetectCollision(nextTailState.points, new IndexedPoint { xIndex = nextHeadState.xIndex, yIndex = nextHeadState.yIndex }))
+                {
+                    _gameLoopTokenSource.Cancel();
+                }
 
                 static IndexedPoint[] CreatePoints(TailState tailState, HeadState headState)
                 {
