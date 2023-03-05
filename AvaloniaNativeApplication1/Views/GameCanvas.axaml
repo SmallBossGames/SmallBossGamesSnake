@@ -5,12 +5,13 @@
         xmlns:vm="using:AvaloniaNativeApplication1.ViewModels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="AvaloniaNativeApplication1.Views.GameCanvas"
-        Title="GameCanvas">
+        Title="SmallBossGames': The Snake">
  
   
   <DockPanel>
-    <StackPanel DockPanel.Dock="Top">
-      <TextBlock x:Name="TopText" Padding="12" Background="AliceBlue">Счёт: 1488</TextBlock>
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Background="AliceBlue">
+      <TextBlock Padding="12" >Счёт: </TextBlock>
+      <TextBlock Padding="12" Text="{Binding SnakeLength, Mode=OneWay}"/>
     </StackPanel>
     <Canvas 
       x:Name="GrassField"

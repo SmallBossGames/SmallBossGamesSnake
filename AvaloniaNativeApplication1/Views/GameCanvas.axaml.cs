@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Media;
 using Avalonia.Threading;
+using AvaloniaNativeApplication1.ViewModels;
 using DynamicData.Binding;
 using System;
 using System.Collections.Generic;
@@ -45,10 +46,11 @@ namespace AvaloniaNativeApplication1.Views
 
     public partial class GameCanvas : Window
     {
-        private readonly uint blocks = 50;
+        private const int TickDelay = 100;
+
+        private const uint Blocks = 50;
 
         private readonly ImmutableArray<Ellipse> _debugPoints;
-       
 
         private readonly CancellationTokenSource _gameLoopTokenSource = new();
 
@@ -82,7 +84,7 @@ namespace AvaloniaNativeApplication1.Views
 
             _tailState = new TailState()
             {
-                points = new IndexedPoint[10],
+                points = new IndexedPoint[2],
                 startIndex = 0,
             };
             RedrawTail();
@@ -134,6 +136,8 @@ namespace AvaloniaNativeApplication1.Views
 
             }
 
+            UpdateScore();
+
             RedrawGrid();
             RedrawTail();
             RedrawHead();
@@ -142,14 +146,14 @@ namespace AvaloniaNativeApplication1.Views
 
         public void RedrawGrid() {
             var squareSize = GrassField.DesiredSize.Width;
-            var step = squareSize / blocks;
+            var step = squareSize / Blocks;
             var offset = step / 2;
 
-            for (uint i = 0; i < blocks; i++)
+            for (uint i = 0; i < Blocks; i++)
             {
-                for (uint j = 0; j < blocks; j++)
+                for (uint j = 0; j < Blocks; j++)
                 {
-                    var dot = _debugPoints[(int)(blocks * i + j)];
+                    var dot = _debugPoints[(int)(Blocks * i + j)];
 
                     Canvas.SetLeft(dot, step * i + offset - dot.Width / 2);
                     Canvas.SetTop(dot, step * j + offset - dot.Height/2);
@@ -162,7 +166,7 @@ namespace AvaloniaNativeApplication1.Views
             return new Polyline()
             {
                 Stroke = Brushes.Orange,
-                StrokeThickness = 4,
+                StrokeThickness = 6,
                 Points = points
             };
         }
@@ -172,7 +176,7 @@ namespace AvaloniaNativeApplication1.Views
             var head = _head;
             var state = _headState;
             var squareSize = GrassField.DesiredSize.Width;
-            var step = squareSize / blocks;
+            var step = squareSize / Blocks;
             var offset = step / 2;
 
             Canvas.SetLeft(head, state.xIndex * step + offset - head.Width / 2);
@@ -182,7 +186,7 @@ namespace AvaloniaNativeApplication1.Views
         public void RedrawTail()
         {
             var squareSize = GrassField.DesiredSize.Width;
-            var step = squareSize / blocks;
+            var step = squareSize / Blocks;
             var offset = step / 2;
 
             var newPoints = new List<Point>(_tailState.points.Length);
@@ -231,11 +235,11 @@ namespace AvaloniaNativeApplication1.Views
         private ImmutableArray<Ellipse> CreateDebugPoints()
         {
             return Enumerable
-                .Range(0, (int)(blocks * blocks))
+                .Range(0, (int)(Blocks * Blocks))
                 .Select(x =>
                 new Ellipse()
                 {
-                    Fill = Brushes.Blue,
+                    Fill = Brushes.GreenYellow,
                     Width = 2,
                     Height = 2,
                 })
@@ -264,15 +268,15 @@ namespace AvaloniaNativeApplication1.Views
 
         private void PlaceApple()
         {
-            var allPoints = Enumerable.Range(0, (int)(blocks * blocks)).ToHashSet();
-            var snakePoints = _tailState.points.Select(x => (int)(x.xIndex * blocks + x.yIndex)).ToHashSet();
+            var allPoints = Enumerable.Range(0, (int)(Blocks * Blocks)).ToHashSet();
+            var snakePoints = _tailState.points.Select(x => (int)(x.xIndex * Blocks + x.yIndex)).ToHashSet();
 
             allPoints.ExceptWith(snakePoints);
             var availablePoints = allPoints.ToImmutableArray();
 
             var index = Random.Shared.Next(availablePoints.Length);
-            var pointX = availablePoints[index] / blocks;
-            var pointY = availablePoints[index] - pointX * blocks;
+            var pointX = availablePoints[index] / Blocks;
+            var pointY = availablePoints[index] - pointX * Blocks;
             var state = new AppleState() 
             {
                 xIndex = (uint)pointX,
@@ -288,7 +292,7 @@ namespace AvaloniaNativeApplication1.Views
             var apple = _apple;
             var state = _appleState;
             var squareSize = GrassField.DesiredSize.Width;
-            var step = squareSize / blocks;
+            var step = squareSize / Blocks;
             var offset = step / 2;
 
             Canvas.SetLeft(apple, state.xIndex * step + offset - apple.Width / 2);
@@ -306,16 +310,16 @@ namespace AvaloniaNativeApplication1.Views
                 switch (nextHeadState.movingDirection)
                 {
                     case MovingDirection.Up:
-                        nextHeadState.yIndex = LoopDecrease(nextHeadState.yIndex, blocks);
+                        nextHeadState.yIndex = LoopDecrease(nextHeadState.yIndex, Blocks);
                         break;
                     case MovingDirection.Down:
-                        nextHeadState.yIndex = LoopIncrease(nextHeadState.yIndex, blocks);
+                        nextHeadState.yIndex = LoopIncrease(nextHeadState.yIndex, Blocks);
                         break;
                     case MovingDirection.Left:
-                        nextHeadState.xIndex = LoopDecrease(nextHeadState.xIndex, blocks);
+                        nextHeadState.xIndex = LoopDecrease(nextHeadState.xIndex, Blocks);
                         break;
                     case MovingDirection.Right:
-                        nextHeadState.xIndex = LoopIncrease(nextHeadState.xIndex, blocks);
+                        nextHeadState.xIndex = LoopIncrease(nextHeadState.xIndex, Blocks);
                         break;
                 }
 
@@ -357,6 +361,8 @@ namespace AvaloniaNativeApplication1.Views
 
                     _tailState = nextTailState;
 
+                    UpdateScore();
+
                     PlaceApple();
                     RedrawApple();
                     RedrawTail();
@@ -379,7 +385,17 @@ namespace AvaloniaNativeApplication1.Views
 
                 
 
-                await Task.Delay(500, cancellationToken);
+                await Task.Delay(TickDelay, cancellationToken);
+            }
+        }
+
+        private void UpdateScore()
+        {
+            if (DataContext is GameCanvasViewModel vm)
+            {
+                var snakeLength = _tailState.points.Length - 1;
+
+                vm.SnakeLength = snakeLength;
             }
         }
 
