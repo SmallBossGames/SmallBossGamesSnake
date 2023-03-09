@@ -6,6 +6,7 @@ using Avalonia.Threading;
 using AvaloniaNativeApplication1.ViewModels;
 using DynamicData.Binding;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -46,9 +47,9 @@ namespace AvaloniaNativeApplication1.Views
 
     public partial class GameCanvas : Window
     {
-        private const int TickDelay = 100;
+        private const int TickDelay = 150;
 
-        private const uint Blocks = 50;
+        private const uint Blocks = 20;
 
         private readonly ImmutableArray<Ellipse> _debugPoints;
         private readonly Shape _head;
@@ -288,23 +289,45 @@ namespace AvaloniaNativeApplication1.Views
 
         private void PlaceApple()
         {
-            var allPoints = Enumerable.Range(0, (int)(Blocks * Blocks)).ToHashSet();
-            var snakePoints = _tailState.points.Select(x => (int)(x.xIndex * Blocks + x.yIndex)).ToHashSet();
+            var fieldScale = (int)(Blocks * Blocks);
+            var bitmap = new BitArray(fieldScale);
 
-            allPoints.ExceptWith(snakePoints);
-            var availablePoints = allPoints.ToImmutableArray();
-
-            var index = Random.Shared.Next(availablePoints.Length);
-            var pointX = availablePoints[index] / Blocks;
-            var pointY = availablePoints[index] - pointX * Blocks;
-            var state = new AppleState() 
+            var availablePointsCount = fieldScale;
+            foreach (var item in _tailState.points)
             {
-                xIndex = (uint)pointX,
-                yIndex = (uint)pointY,
-            };
+                var valueIndex = (int)(item.xIndex * Blocks + item.yIndex);
 
-            _appleState = state;
+                bitmap[valueIndex] = true;
+                availablePointsCount--;
+            }
 
+            var index = Random.Shared.Next(availablePointsCount);
+
+            var counter = 0;
+            for (var i = 0; i < fieldScale; i++)
+            {
+                if (bitmap[i])
+                {
+                    continue;
+                }
+
+                if(counter == index)
+                {
+                    var pointX = i / Blocks;
+                    var pointY = i - pointX * Blocks;
+                    var state = new AppleState()
+                    {
+                        xIndex = (uint)pointX,
+                        yIndex = (uint)pointY,
+                    };
+
+                    _appleState = state;
+
+                    break;
+                }
+
+                counter++;
+            }
         }
 
         private void RedrawApple()
