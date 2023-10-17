@@ -5,11 +5,13 @@
         xmlns:vm="using:AvaloniaNativeApplication1.ViewModels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="AvaloniaNativeApplication1.Views.GameCanvas"
-        Title="SmallBossGames': The Snake">
+        x:DataType="vm:GameCanvasViewModel"
+        Title="SmallBossGames': The Snake"
+        >
  
   
   <DockPanel>
-    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Background="AliceBlue">
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
       <Button x:Name="RestartButton" Padding="8" Margin="4">Restart</Button>
       <TextBlock Padding="12" >Score: </TextBlock>
       <TextBlock Padding="12" Text="{Binding SnakeLength, Mode=OneWay}"/>

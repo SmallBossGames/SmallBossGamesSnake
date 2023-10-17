@@ -1,28 +1,29 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using AvaloniaNativeApplication1.ViewModels;
+using AvaloniaNativeApplication1.Views;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 
 namespace AvaloniaNativeApplication1
 {
     public class ViewLocator : IDataTemplate
     {
-        public IControl Build(object data)
+        public Control Build(object data)
         {
-            var name = data.GetType().FullName!.Replace("ViewModel", "View");
-            var type = Type.GetType(name);
-
-            if (type != null)
+            return data switch
             {
-                return (Control)Activator.CreateInstance(type)!;
-            }
-
-            return new TextBlock { Text = "Not Found: " + name };
+                GameCanvasViewModel vm => new GameCanvas()
+                {
+                    DataContext = vm,
+                },
+                _ => new TextBlock { Text = "Not Found control" }
+            };
         }
 
         public bool Match(object data)
         {
-            return data is ViewModelBase;
+            return data is ObservableObject;
         }
     }
 }

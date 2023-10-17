@@ -1,41 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <PublishAot>true</PublishAot>
   </PropertyGroup>
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
-    <AvaloniaXaml Remove="Models\**" />
-    <Compile Remove="Models\**" />
-    <EmbeddedResource Remove="Models\**" />
-    <None Remove="Models\**" />
-    <None Remove=".gitignore" />
   </ItemGroup>
 
   <ItemGroup>
-    <TrimmerRootDescriptor Include="Roots.xml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.0.0-preview4" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.0.0-preview4" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.0-preview4" />
+    <PackageReference Include="Avalonia" Version="11.0.2" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0.2" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.2" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.2" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.0-preview4" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.0-preview4" />
-    <PackageReference Include="XamlNameReferenceGenerator" Version="1.5.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PrivateSdkAssemblies Remove="Models\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <FrameworkAssemblies Remove="Models\**" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.2" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.2" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
   </ItemGroup>
 </Project>

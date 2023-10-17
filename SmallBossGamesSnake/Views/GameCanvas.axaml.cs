@@ -2,9 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Media;
-using Avalonia.Threading;
 using AvaloniaNativeApplication1.ViewModels;
-using DynamicData.Binding;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -54,7 +52,7 @@ namespace AvaloniaNativeApplication1.Views
         private readonly ImmutableArray<Ellipse> _debugPoints;
         private readonly Shape _head;
         private readonly Shape _apple;
-        private readonly List<Polyline> _tailLines = new();
+        private readonly List<Polyline> _tailLines = [];
 
         private CancellationTokenSource _gameLoopTokenSource = new();
         private MovingDirection _nextDirection;
