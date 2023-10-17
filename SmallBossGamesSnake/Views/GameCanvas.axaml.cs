@@ -13,11 +13,6 @@ using System.Threading.Tasks;
 
 namespace AvaloniaNativeApplication1.Views
 {
-    public enum MovingDirection
-    {
-        Up, Down, Left, Right
-    }
-
     public struct IndexedPoint 
     { 
         public uint xIndex;
@@ -26,7 +21,7 @@ namespace AvaloniaNativeApplication1.Views
 
     public struct HeadState
     {
-        public MovingDirection movingDirection;
+        public Moving moving;
         public uint xIndex;
         public uint yIndex;
     }
@@ -43,6 +38,14 @@ namespace AvaloniaNativeApplication1.Views
         public uint yIndex;
     }
 
+    public record struct Moving(int X, int Y)
+    {
+        public static Moving Up => new(0, -1);
+        public static Moving Down => new(0, 1);
+        public static Moving Left => new(-1, 0);
+        public static Moving Right => new(1, 0);
+    }
+
     public partial class GameCanvas : Window
     {
         private const int TickDelay = 150;
@@ -55,7 +58,7 @@ namespace AvaloniaNativeApplication1.Views
         private readonly List<Polyline> _tailLines = [];
 
         private CancellationTokenSource _gameLoopTokenSource = new();
-        private MovingDirection _nextDirection;
+        private Moving _nextDirection;
         private HeadState _headState;
         private TailState _tailState;
         private AppleState _appleState;
@@ -97,17 +100,17 @@ namespace AvaloniaNativeApplication1.Views
         {
             switch (e.Key)
             {
-                case Avalonia.Input.Key.Up when _headState.movingDirection is not MovingDirection.Down:
-                    _nextDirection = MovingDirection.Up;
+                case Avalonia.Input.Key.Up when _headState.moving != Moving.Down:
+                    _nextDirection = Moving.Up;
                     break;
-                case Avalonia.Input.Key.Down when _headState.movingDirection is not MovingDirection.Up:
-                    _nextDirection = MovingDirection.Down;
+                case Avalonia.Input.Key.Down when _headState.moving != Moving.Up:
+                    _nextDirection = Moving.Down;
                     break;
-                case Avalonia.Input.Key.Left when _headState.movingDirection is not MovingDirection.Right:
-                    _nextDirection = MovingDirection.Left;
+                case Avalonia.Input.Key.Left when _headState.moving != Moving.Right:
+                    _nextDirection = Moving.Left;
                     break;
-                case Avalonia.Input.Key.Right when _headState.movingDirection is not MovingDirection.Left:
-                    _nextDirection = MovingDirection.Right;
+                case Avalonia.Input.Key.Right when _headState.moving != Moving.Left:
+                    _nextDirection = Moving.Right;
                     break;
             }
         }
@@ -132,11 +135,11 @@ namespace AvaloniaNativeApplication1.Views
 
         private void ResetState()
         {
-            _nextDirection = MovingDirection.Up;
+            _nextDirection = Moving.Up;
 
             _headState = new HeadState()
             {
-                movingDirection = MovingDirection.Up,
+                moving = Moving.Up,
                 xIndex = 1,
                 yIndex = Blocks - 1,
             };
@@ -344,30 +347,7 @@ namespace AvaloniaNativeApplication1.Views
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var nextHeadState = _headState;
-
-                nextHeadState.movingDirection = _nextDirection;
-
-                switch (nextHeadState.movingDirection)
-                {
-                    case MovingDirection.Up:
-                        nextHeadState.yIndex = LoopDecrease(nextHeadState.yIndex, Blocks);
-                        break;
-                    case MovingDirection.Down:
-                        nextHeadState.yIndex = LoopIncrease(nextHeadState.yIndex, Blocks);
-                        break;
-                    case MovingDirection.Left:
-                        nextHeadState.xIndex = LoopDecrease(nextHeadState.xIndex, Blocks);
-                        break;
-                    case MovingDirection.Right:
-                        nextHeadState.xIndex = LoopIncrease(nextHeadState.xIndex, Blocks);
-                        break;
-                }
-
-                if (nextHeadState.xIndex == _appleState.xIndex && nextHeadState.yIndex == _appleState.yIndex)
-                {
-
-                }
+                var nextHeadState = LoopSum(_headState, _nextDirection, Blocks);
 
                 _headState = nextHeadState;
 
@@ -376,20 +356,17 @@ namespace AvaloniaNativeApplication1.Views
 
                 static bool DetectCollision(ReadOnlySpan<IndexedPoint> points, IndexedPoint headPoint)
                 {
-                    foreach (var item in points)
+                    var collisionCount = 0;
+
+                    foreach (var item in points[1..])
                     {
-                        if (item.xIndex == headPoint.xIndex && item.yIndex == headPoint.yIndex)
+                        if (item.xIndex == headPoint.xIndex && item.yIndex == headPoint.yIndex && ++collisionCount > 1)
                         {
                             return true;
                         }
                     }
 
                     return false;
-                }
-
-                if (DetectCollision(nextTailState.points, new IndexedPoint { xIndex = nextHeadState.xIndex, yIndex = nextHeadState.yIndex }))
-                {
-                    _gameLoopTokenSource.Cancel();
                 }
 
                 static IndexedPoint[] CreatePoints(TailState tailState, HeadState headState)
@@ -442,7 +419,10 @@ namespace AvaloniaNativeApplication1.Views
                     RedrawHead();
                 }
 
-                
+                if (DetectCollision(nextTailState.points, new IndexedPoint { xIndex = nextHeadState.xIndex, yIndex = nextHeadState.yIndex }))
+                {
+                    _gameLoopTokenSource.Cancel();
+                }
 
                 await Task.Delay(TickDelay, cancellationToken);
             }
@@ -458,9 +438,14 @@ namespace AvaloniaNativeApplication1.Views
             }
         }
 
-        private static uint LoopDecrease(uint value, uint maxValue)
+        private static HeadState LoopSum(HeadState value, Moving moving, uint maxValue)
         {
-            return value == 0 ? maxValue - 1 : value - 1;
+            return value with
+            {
+                moving = moving,
+                xIndex = (uint)((maxValue + value.xIndex + moving.X) % maxValue),
+                yIndex = (uint)((maxValue + value.yIndex + moving.Y) % maxValue)
+            };
         }
 
         private static uint LoopIncrease(uint value, uint maxValue)
