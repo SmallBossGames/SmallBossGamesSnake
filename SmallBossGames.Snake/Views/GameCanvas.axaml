@@ -7,6 +7,7 @@
         x:Class="AvaloniaNativeApplication1.Views.GameCanvas"
         x:DataType="vm:GameCanvasViewModel"
         Title="SmallBossGames': The Snake"
+        Icon="/Assets/avalonia-logo.ico"
         >
  
   
