@@ -1,29 +1,29 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using AvaloniaNativeApplication1.ViewModels;
-using AvaloniaNativeApplication1.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
-using System;
 
-namespace AvaloniaNativeApplication1
+namespace SmallBossGames.Snake;
+
+public class ViewLocator : IDataTemplate
 {
-    public class ViewLocator : IDataTemplate
+    public Control Build(object data)
     {
-        public Control Build(object data)
+        if (data is null)
+            return null;
+
+        var name = data.GetType().FullName!.Replace("ViewModel", "View");
+        var type = Type.GetType(name);
+
+        if (type != null)
         {
-            return data switch
-            {
-                GameCanvasViewModel vm => new GameCanvas()
-                {
-                    DataContext = vm,
-                },
-                _ => new TextBlock { Text = "Not Found control" }
-            };
+            return (Control)Activator.CreateInstance(type)!;
         }
 
-        public bool Match(object data)
-        {
-            return data is ObservableObject;
-        }
+        return new TextBlock { Text = name };
+    }
+
+    public bool Match(object? data)
+    {
+        return data is ObservableObject;
     }
 }

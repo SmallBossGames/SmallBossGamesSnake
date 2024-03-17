@@ -1,12 +1,11 @@
 using Avalonia.Controls;
 
-namespace AvaloniaNativeApplication1.Views
+namespace SmallBossGames.Snake.Views;
+
+public partial class MainWindow : Window
 {
-    public partial class MainWindow : Window
+    public MainWindow()
     {
-        public MainWindow()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

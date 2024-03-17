@@ -1,27 +1,25 @@
-<Window xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:vm="using:AvaloniaNativeApplication1.ViewModels"
+        xmlns:vm="using:SmallBossGames.Snake.ViewModels"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="AvaloniaNativeApplication1.Views.GameCanvas"
+        x:Class="SmallBossGames.Snake.Views.GameCanvasView"
         x:DataType="vm:GameCanvasViewModel"
-        Title="SmallBossGames': The Snake"
-        Icon="/Assets/avalonia-logo.ico"
         >
- 
-  
+
+
   <DockPanel>
     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
       <Button x:Name="RestartButton" Padding="8" Margin="4">Restart</Button>
       <TextBlock Padding="12" >Score: </TextBlock>
       <TextBlock Padding="12" Text="{Binding SnakeLength, Mode=OneWay}"/>
     </StackPanel>
-    <Canvas 
+    <Canvas
       x:Name="GrassField"
       Background="LightGreen"
       
       />
   </DockPanel>
 
-</Window>
+</UserControl>

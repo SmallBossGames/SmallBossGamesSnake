@@ -1,8 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace AvaloniaNativeApplication1.ViewModels
+namespace SmallBossGames.Snake.ViewModels
 {
-    public class MainWindowViewModel : ObservableObject
+    public class MainViewModel : ObservableObject
     {
         public string Greeting => "Welcome to Avalonia!";
     }

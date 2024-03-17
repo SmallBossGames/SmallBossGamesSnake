@@ -1,29 +1,36 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using AvaloniaNativeApplication1.ViewModels;
-using AvaloniaNativeApplication1.Views;
+using SmallBossGames.Snake.ViewModels;
+using SmallBossGames.Snake.Views;
 
-namespace AvaloniaNativeApplication1
+namespace SmallBossGames.Snake;
+
+public partial class App : Application
 {
-    public partial class App : Application
+    public override void Initialize()
     {
-        public override void Initialize()
-        {
-            AvaloniaXamlLoader.Load(this);
-        }
+        AvaloniaXamlLoader.Load(this);
+    }
 
-        public override void OnFrameworkInitializationCompleted()
+    public override void OnFrameworkInitializationCompleted()
+    {
+        switch (ApplicationLifetime)
         {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-            {
-                desktop.MainWindow = new GameCanvas
+            case IClassicDesktopStyleApplicationLifetime desktop:
+                desktop.MainWindow = new MainWindow
                 {
-                    DataContext = new GameCanvasViewModel(),
+                    DataContext = new GameCanvasViewModel()
                 };
-            }
-
-            base.OnFrameworkInitializationCompleted();
+                break;
+            case ISingleViewApplicationLifetime singleViewPlatform:
+                singleViewPlatform.MainView = new MainView
+                {
+                    DataContext = new GameCanvasViewModel()
+                };
+                break;
         }
+
+        base.OnFrameworkInitializationCompleted();
     }
 }
