@@ -15,8 +15,8 @@ using System.Threading.Tasks;
 
 namespace SmallBossGames.Snake.Views;
 
-public struct IndexedPoint 
-{ 
+public struct IndexedPoint
+{
     public uint xIndex;
     public uint yIndex;
 }
@@ -93,7 +93,7 @@ public partial class GameCanvasView : UserControl
 
     private void RestartButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-       ResetState();
+        ResetState();
     }
 
     private void GameCanvas_Closing(object? sender, LogicalTreeAttachmentEventArgs e)
@@ -149,7 +149,7 @@ public partial class GameCanvasView : UserControl
             xIndex = 1,
             yIndex = Blocks - 1,
         };
-       
+
         _tailState = new TailState()
         {
             points = new IndexedPoint[2],
@@ -172,7 +172,8 @@ public partial class GameCanvasView : UserControl
         _ = StartGameLoopAsync(_gameLoopTokenSource.Token);
     }
 
-    public void RedrawDebugGrid() {
+    public void RedrawDebugGrid()
+    {
         var squareSize = GrassField.DesiredSize.Width;
         var step = squareSize / Blocks;
         var offset = step / 2;
@@ -184,7 +185,7 @@ public partial class GameCanvasView : UserControl
                 var dot = _debugPoints[(int)(Blocks * i + j)];
 
                 Canvas.SetLeft(dot, step * i + offset - dot.Width / 2);
-                Canvas.SetTop(dot, step * j + offset - dot.Height/2);
+                Canvas.SetTop(dot, step * j + offset - dot.Height / 2);
             }
         }
     }
@@ -252,7 +253,7 @@ public partial class GameCanvasView : UserControl
         fragments.Add(lastFragment);
 
         var oldFragments = _tailLines.ToArray();
-        
+
         _tailLines.Clear();
         _tailLines.AddRange(fragments);
 
@@ -318,7 +319,7 @@ public partial class GameCanvasView : UserControl
                 continue;
             }
 
-            if(counter == index)
+            if (counter == index)
             {
                 var pointX = i / Blocks;
                 var pointY = i - pointX * Blocks;

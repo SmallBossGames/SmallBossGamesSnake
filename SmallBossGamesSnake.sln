@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33417.168
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmallBossGames.Snake.Desktop", "SmallBossGamesSnake\SmallBossGames.Snake.Desktop.csproj", "{3E74911A-333A-4E26-ADD1-874F4CF15873}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmallBossGames.Snake.Desktop", "SmallBossGames.Snake.Desktop\SmallBossGames.Snake.Desktop.csproj", "{3E74911A-333A-4E26-ADD1-874F4CF15873}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmallBossGames.Snake", "SmallBossGames.Snake\SmallBossGames.Snake.csproj", "{4B246A92-F365-45EA-AD39-165D10D9B6EC}"
 EndProject
