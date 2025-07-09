@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="SmallBossGames.Snake.Desktop/SmallBossGames.Snake.Desktop.csproj" />
+  <Project Path="SmallBossGames.Snake/SmallBossGames.Snake.csproj" />
+</Solution>
