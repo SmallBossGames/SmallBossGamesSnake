@@ -1,17 +1,12 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
-using Avalonia.Input;
 using Avalonia.LogicalTree;
+using Avalonia.Markup.Declarative;
 using Avalonia.Media;
 using SmallBossGames.Snake.ViewModels;
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace SmallBossGames.Snake.Views;
 
@@ -48,7 +43,7 @@ public record struct Moving(int X, int Y)
     public static Moving Right => new(1, 0);
 }
 
-public partial class GameCanvasView : UserControl
+public partial class GameCanvasView : ViewBase<GameCanvasViewModel>
 {
     private const int TickDelay = 150;
 
@@ -67,10 +62,18 @@ public partial class GameCanvasView : UserControl
 
     private readonly IDisposable _keyEventHandler;
 
-    public GameCanvasView()
-    {
-        InitializeComponent();
+    private readonly Canvas GrassField = new Canvas()
+        .Background(Brushes.LightGreen);
 
+    private readonly Button RestartButton = new Button()
+        .Padding(8)
+        .Margin(4)
+        .Content("Restart");
+
+    public GameCanvasView(
+        GameCanvasViewModel viewModel
+    ): base(viewModel)
+    {
         _debugPoints = CreateDebugPoints();
         GrassField.Children.AddRange(_debugPoints);
 
@@ -90,6 +93,20 @@ public partial class GameCanvasView : UserControl
 
         ResetState();
     }
+
+    protected override object Build(GameCanvasViewModel? vm) => new DockPanel()
+        .Children(
+            new StackPanel()
+                .Dock(Dock.Top)
+                .Orientation(Avalonia.Layout.Orientation.Horizontal)
+                .Children(
+                    RestartButton,
+                    new TextBlock()
+                        .Padding(12)
+                        .Text(() => $"Score: {vm!.SnakeLength}")
+                ),
+            GrassField
+        );
 
     private void RestartButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
@@ -261,9 +278,10 @@ public partial class GameCanvasView : UserControl
         GrassField.Children.AddRange(fragments);
     }
 
-    private ImmutableArray<Ellipse> CreateDebugPoints()
+    private static ImmutableArray<Ellipse> CreateDebugPoints()
     {
-        return Enumerable
+        return
+        [.. Enumerable
             .Range(0, (int)(Blocks * Blocks))
             .Select(x =>
             new Ellipse()
@@ -272,7 +290,7 @@ public partial class GameCanvasView : UserControl
                 Width = 2,
                 Height = 2,
             })
-            .ToImmutableArray();
+        ];
     }
 
     private Ellipse CreateHead()

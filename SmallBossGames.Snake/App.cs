@@ -1,6 +1,9 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Markup.Declarative;
 using Avalonia.Markup.Xaml;
+using Avalonia.Styling;
+using Avalonia.Themes.Fluent;
 using SmallBossGames.Snake.ViewModels;
 using SmallBossGames.Snake.Views;
 
@@ -10,7 +13,9 @@ public partial class App : Application
 {
     public override void Initialize()
     {
-        AvaloniaXamlLoader.Load(this);
+        Styles.Add(new FluentTheme());
+        DataTemplates.Add(new ViewLocator());
+        RequestedThemeVariant = ThemeVariant.Default;
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -18,16 +23,12 @@ public partial class App : Application
         switch (ApplicationLifetime)
         {
             case IClassicDesktopStyleApplicationLifetime desktop:
-                desktop.MainWindow = new MainWindow
-                {
-                    DataContext = new GameCanvasViewModel()
-                };
+                desktop.MainWindow = new MainWindow()
+                    .Content(new GameCanvasView(new GameCanvasViewModel()));
                 break;
             case ISingleViewApplicationLifetime singleViewPlatform:
-                singleViewPlatform.MainView = new MainView
-                {
-                    DataContext = new GameCanvasViewModel()
-                };
+                singleViewPlatform.MainView = new MainWindow()
+                    .Content(new GameCanvasView(new GameCanvasViewModel()));
                 break;
         }
 

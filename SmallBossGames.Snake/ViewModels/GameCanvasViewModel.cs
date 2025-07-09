@@ -2,7 +2,7 @@
 
 namespace SmallBossGames.Snake.ViewModels;
 
-internal partial class GameCanvasViewModel : ObservableObject
+public partial class GameCanvasViewModel : ObservableObject
 {
     [ObservableProperty]
     private double _squareSize = 10;
